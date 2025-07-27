@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blog Markdown Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 2rem;
+      background-color: #f8f9fa;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📝 Create Blog Markdown File</h1>
+
+  <label for="title">Blog Title (autofilled from 1st line)</label>
+  <input type="text" id="title" placeholder="Title will autofill..." />
+
+  <label for="content">Blog Content (Markdown)</label>
+  <textarea id="content" rows="12" placeholder="Start your blog..."></textarea>
+
+  <button onclick="downloadMarkdown()">⬇️ Download .md File</button>
+
+  <script>
+    const titleInput = document.getElementById("title");
+    const contentInput = document.getElementById("content");
+
+    contentInput.addEventListener("input", () => {
+      const lines = contentInput.value.trim().split("\n");
+      if (lines.length > 0 && !titleInput.dataset.manualEdit) {
+        titleInput.value = lines[0].trim();
+      }
+    });
+
+    titleInput.addEventListener("input", () => {
+      titleInput.dataset.manualEdit = true;
+    });
+
+    function downloadMarkdown() {
+      const rawTitle = titleInput.value.trim();
+      const rawContent = contentInput.value.trim();
+
+      if (!rawTitle || !rawContent) {
+        alert("Please enter both title and content.");
+        return;
+      }
+
+      const contentLines = rawContent.split("\n");
+      const contentWithoutTitle = contentLines.slice(1).join("\n").trim();
+      const date = new Date().toISOString().split("T")[0];
+      const slug = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      const filename = `${date}-${slug}.md`;
+
+      const frontmatter = `---\nlayout: blogpost\ntitle: "${rawTitle}"\ndate: ${date}\ncategories: blog\n---\n\n`;
+      const finalMarkdown = frontmatter + contentWithoutTitle;
+
+      const blob = new Blob([finalMarkdown], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+
+</body>
+</html>

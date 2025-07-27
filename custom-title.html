@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Markdown Blog Generator</title>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+      background: #f6f8fa;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    form {
+      max-width: 700px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h1>Markdown Blog File Generator</h1>
+  <form id="markdownForm">
+    <input type="text" id="title" placeholder="Blog Title" required>
+    <input type="text" id="category" placeholder="Category (e.g. blog, tutorial)" required>
+    <textarea id="content" placeholder="Blog Content (Markdown supported)" rows="12" required></textarea>
+    <button type="submit">Generate .md File</button>
+  </form>
+
+  <p class="message" id="msg"></p>
+
+  <script>
+    document.getElementById('markdownForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value.trim();
+      const category = document.getElementById('category').value.trim() || 'blog';
+      const content = document.getElementById('content').value.trim();
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      
+      const now = new Date();
+      const ymd = now.toISOString().split("T")[0];
+      const fullDate = now.toISOString().slice(0, 19).replace("T", " ") + " +0530";
+      const filename = `${ymd}-${slug}.md`;
+
+      const frontmatter = 
+`---
+layout: blogpost
+title: "${title}"
+date: ${fullDate}
+categories: ${category}
+---
+
+`;
+
+      const markdown = frontmatter + content;
+
+      const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+
+      document.getElementById('msg').innerText = `Downloaded: ${filename}`;
+    });
+  </script>
+
+  <script>
+    function saveBlog() {
+      const title = document.getElementById("title").value;
+      const content = document.getElementById("content").value;
+    
+      const frontmatter = `---\ntitle: "${title}"\ndate: ${new Date().toISOString()}\ncategories: blog\n---\n\n`;
+      const fullContent = frontmatter + content;
+      const filename = new Date().toISOString().split('T')[0] + '-' + title.toLowerCase().replace(/\s+/g, '-') + '.md';
+    
+      fetch('/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filename, content: fullContent })
+      })
+      .then(res => res.text())
+      .then(msg => alert(msg))
+      .catch(err => alert("Error: " + err));
+    }
+    </script>
+    
+</body>
+</html>
